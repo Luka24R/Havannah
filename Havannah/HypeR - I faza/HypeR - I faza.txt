@@ -1,0 +1,148 @@
+(setf tabla (make-array '(60 100)))
+
+(setf n 6)
+
+(setf znak (- n 1))
+
+(setf pomeraj znak)
+
+
+
+(setf prvi_igrac 0);;0 prvi igrac covek, drugi kompjuter      1 komp pa covek
+
+(setf vrednost_polja_igranje '(X O))
+(setf moduo_za_vrednost_polja 0)
+
+
+
+
+
+
+
+
+(defun spremi-tablu()
+(loop for i from 0 to (- n 1)
+      do (loop for j from 0 to (- (* 4 n) 4)
+          do (setf (aref tabla i j) '*) (if(and(equal j znak)(< j (- (- (* 4 n) 3) pomeraj)))
+											(progn (setf (aref tabla i j) '8) (setf znak (+ znak 2)))
+											
+										)
+		  )
+		  
+		  ;;deo u spoljasnjoj petlji
+		  (setf znak (- n 1 i 1)) (setf pomeraj (- pomeraj 1))
+)
+(setf c 2)
+(loop for i from n to (- (* 2 n) 2)
+      do (loop for j from 0 to (- (* 4 n) 4)
+          do (setf (aref tabla i j) (aref tabla (- i c) j)) 
+		  )
+		  
+		  ;;deo u spoljasnjoj petlji
+		  (setf c (+ c 2)) 
+)
+)
+
+(setf slova '(A B C D E F G H I J K L M N O P Q R S T U V W X Y Z))
+
+(setf potezi-igraca (make-list (- ( * 2 n) 1)))
+
+(defun dodaj-kljuceve (i broj)
+  (cond ((equal i broj) potezi-igraca)
+        (t (cons (list (nth i slova)) (dodaj-kljuceve (+ i 1) broj)))))
+
+(defun ubaci-poteze()
+  (setf nekibroj (- ( * 2 n)1))
+  (setf potezi-igraca (dodaj-kljuceve 0 nekibroj))
+
+  )
+
+(defun odaberi-n(q)
+(setf n q)
+(setf znak (- n 1))
+(setf pomeraj znak)
+(spremi-tablu)
+(ubaci-poteze)
+)
+
+(defun dodaj-potez ( a b igrac)
+  (setf (nth (position a slova) potezi-igraca) (append  (nth (position a slova) potezi-igraca) (list (list b igrac)))))
+
+(defun odigraj-potez(a b igrac)
+  (mapiraj a b igrac)
+  (dodaj-potez a b igrac)
+)
+
+(defun stampaj()
+(loop for i from 0 to (- (* 2 n) 2)
+      do (loop for j from 0 to (- (* 4 n) 4)
+          do (princ (aref tabla i j)) (princ #\Space)
+		  )
+			(princ #\Newline)
+)
+)
+
+
+
+
+
+
+
+
+
+
+
+
+
+(defun validacija (a b pomeraj)
+(cond ((equal (aref tabla (position a slova) (+ (* 2 b) pomeraj) ) '8 ) T)
+	(t'())
+))
+
+(defun mapiraj (a b igrac)
+  
+  (setf br (- n (position a slova) 1))
+(cond ( (validacija a b br) (setf (aref tabla (position a slova) (+ (* 2 b) br) ) igrac))
+	(t '()))
+)
+
+
+
+
+
+
+(defun odabir_prvog_igraca (x)
+(setf prvi_igrac x)
+)
+
+
+(defun igraj_potez()
+
+	(cond ((equal prvi_igrac 0) (igra_prvi_covek))
+			(t (igra_prvi_kompjuter))
+		)
+
+)
+
+(defun igra_prvi_covek()
+	;;regulano igra prvi covek
+	(odigraj-potez (read) (read) (nth moduo_za_vrednost_polja vrednost_polja_igranje) )  ;;read potez
+	(setf moduo_za_vrednost_polja (mod moduo_za_vrednost_polja 2))
+	(setf moduo_za_vrednost_polja (mod (+ moduo_za_vrednost_polja 1) 2))
+	;;ovde ce da ide potez kompjutera umesto READ kad se napravi min-max
+	(odigraj-potez (read) (read) (nth moduo_za_vrednost_polja vrednost_polja_igranje) )  ;;read potez
+	(setf moduo_za_vrednost_polja (mod moduo_za_vrednost_polja 2))
+	(setf moduo_za_vrednost_polja (mod (+ moduo_za_vrednost_polja 1) 2))
+	
+)
+(defun igra_prvi_kompjuter()
+	;;samo ovde prvo mapiraj ce da bude za poteze koje vrati funkcija min-max za odabir poteza
+	(odigraj-potez (read) (read) (nth moduo_za_vrednost_polja vrednost_polja_igranje) )  ;;read potez
+	(setf moduo_za_vrednost_polja (mod moduo_za_vrednost_polja 2))
+	(setf moduo_za_vrednost_polja (mod (+ moduo_za_vrednost_polja 1) 2))
+	
+	;;regularno igranje prvog coveka
+	(odigraj-potez (read) (read) (nth moduo_za_vrednost_polja vrednost_polja_igranje) )  ;;read potez
+	(setf moduo_za_vrednost_polja (mod moduo_za_vrednost_polja 2))
+	(setf moduo_za_vrednost_polja (mod (+ moduo_za_vrednost_polja 1) 2))
+)

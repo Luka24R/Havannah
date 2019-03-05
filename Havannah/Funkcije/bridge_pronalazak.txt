@@ -1,0 +1,27 @@
+(defun bridge(graf igrac)
+;;temena su na:    (A 0 )  (A n-1)  ((n-1) 0)  ((n-1)(2n-1))  ((2n-1)(n-1))   ((2n-1)(2n-1)) 
+;; provera za sve kombinacije moguce od temena do temena
+		(or 				   ;;teme     do_temena
+				(if (equal teme do_temena)(nadji-put graf (A 0 ?) (A (- n 1) ?) '() (aref tabla teme)) )
+				(if (equal teme do_temena)(nadji-put graf (A 0 ?) ((nth (- n 1) slova) 0 ?) '() (aref tabla teme)) )
+				(if (equal teme do_temena)(nadji-put graf (A 0 ?) ((nth (- n 1) slova) (- (* 2 n) 1) ?) '() (aref tabla teme)) )
+				(if (equal teme do_temena)(nadji-put graf (A 0 ?) ((nth (- (* 2 n) 1) slova) (- n 1) ?) '() (aref tabla teme)) )
+				(if (equal teme do_temena)(nadji-put graf (A 0 ?) ((nth (- (* 2 n) 1) slova) (- (* 2 n) 1) ?) '() (aref tabla teme)) )
+				
+				(if (equal teme do_temena)(nadji-put graf (A (- n 1) ?) ((nth (- n 1) slova) 0 ?) '() (aref tabla teme)) )
+				(if (equal teme do_temena)(nadji-put graf (A (- n 1) ?) ((nth (- n 1) slova) (- (* 2 n) 1) ?) '() (aref tabla teme)) )
+				(if (equal teme do_temena)(nadji-put graf (A (- n 1) ?) ((nth (- (* 2 n) 1) slova) (- n 1) ?) '() (aref tabla teme)) )
+				(if (equal teme do_temena)(nadji-put graf (A (- n 1) ?) ((nth (- (* 2 n) 1) slova) (- (* 2 n) 1) ?) '() (aref tabla teme)) )
+				
+				(if (equal teme do_temena)(nadji-put graf ((nth (- n 1) slova) 0 ?) ((nth (- n 1) slova) (- (* 2 n) 1) ?) '() (aref tabla teme)) )
+				(if (equal teme do_temena)(nadji-put graf ((nth (- n 1) slova) 0 ?) ((nth (- (* 2 n) 1) slova) (- n 1) ?) '() (aref tabla teme)) )
+				(if (equal teme do_temena)(nadji-put graf ((nth (- n 1) slova) 0 ?) ((nth (- (* 2 n) 1) slova) (- (* 2 n) 1) ?) '() (aref tabla teme)) )
+				
+				(if (equal teme do_temena)(nadji-put graf ((nth (- n 1) slova) (- (* 2 n) 1) ?) ((nth (- (* 2 n) 1) slova) (- n 1) ?) '() (aref tabla teme)) )
+				(if (equal teme do_temena)(nadji-put graf ((nth (- n 1) slova) (- (* 2 n) 1) ?) ((nth (- (* 2 n) 1) slova) (- (* 2 n) 1) ?) '() (aref tabla teme)) )
+				
+				(if (equal teme do_temena)(nadji-put graf ((nth (- (* 2 n) 1) slova) (- n 1) ?) ((nth (- (* 2 n) 1) slova) (- (* 2 n) 1) ?) '() (aref tabla teme)) )
+				
+		)
+
+)

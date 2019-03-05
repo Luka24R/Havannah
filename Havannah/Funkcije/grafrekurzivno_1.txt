@@ -1,0 +1,32 @@
+(defun pravi_graf_rek(i j lista)
+  (cond ((equal j (- (* 4 n) 4)) (pravi_graf_rek (+ 1 i) 0 lista))
+        ((equal i  (- (* 2 n) 2)) lista)
+        (t 
+         (let ((lista1 
+                ( if (OR (equal (aref tabla i j) 8) (equal (aref tabla i j) 'x) (equal (aref tabla i j) 'o)) 
+                    (append (list (list  (list (nth i slova) (/ (- (+ j i 1) n) 2) (aref tabla i j)) (vrati_potege i j))) lista)
+                  lista
+                )))
+             (pravi_graf_rek i (+ j 1) lista1)))))
+
+
+
+(defun vrati_potege(i j)
+	(list
+		(if (> i 0) (vrati_potomka_ako_postoji (- i 1) (- j 1)))
+		
+		(if (> i 0) (vrati_potomka_ako_postoji (- i 1) (+ 1 j)))
+		
+		(if (> j 1) (vrati_potomka_ako_postoji i (- j 2)))
+		
+		(if (< j (- (* 4 n) 5)) (vrati_potomka_ako_postoji i (+ 2 j)))
+		
+		(if (< i (- (* 2 n) 1)) (vrati_potomka_ako_postoji (+ 1 i) (- j 1)))
+	
+		(if (< i (- (* 2 n) 1)) (vrati_potomka_ako_postoji (+ 1 i) (+ j 1)))
+	)
+)
+
+(defun vrati_potomka_ako_postoji(i j)
+	(if (and (> i -1) (> j -1)) (if (OR (equal (aref tabla i j) 8) (equal (aref tabla i j) 'x) (equal (aref tabla i j) 'o)) (list (nth i slova) (/ (- (+ j i 1) n) 2) (aref tabla i j) )))
+)

@@ -1,0 +1,32 @@
+(defun pravi_graf()
+	
+		(loop for i from 0 to (- (* 2 n) 2)
+			do (loop for j from 0 to (- (* 4 n) 4)
+				do (if (equal (aref tabla i j) 8)
+								(list (nth i slova) (/ (- (+ j i 1) n) 2) (aref tabla i j) (vrati_potege i j))
+								)
+								
+				)
+		)
+	
+)	
+
+(defun vrati_potege(i j)
+	(list
+		(if (> i 0) (vrati_potomka_ako_postoji (- i 1) (- j 1)))
+		
+		(if (> i 0) (vrati_potomka_ako_postoji (- i 1) (+ 1 j)))
+		
+		(if (> j 1) (vrati_potomka_ako_postoji i (- j 2)))
+		
+		(if (< j (- (* 4 n) 5)) (vrati_potomka_ako_postoji i (+ 2 j)))
+		
+		(if (< i (- (* 2 n) 1)) (vrati_potomka_ako_postoji (+ 1 i) (- j 1)))
+	
+		(if (< i (- (* 2 n) 1)) (vrati_potomka_ako_postoji (+ 1 i) (+ j 1)))
+	)
+)
+
+(defun vrati_potomka_ako_postoji(i j)
+	(if (and (> i -1) (> j -1)) (if (equal (aref tabla i j) 8 ) (list (nth i slova) (/ (- (+ j i 1) n) 2) (aref tabla i j) )))
+)

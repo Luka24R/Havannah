@@ -1,0 +1,558 @@
+(setf tabla (make-array '(60 100)))
+
+(setf n 6)
+
+(setf znak (- n 1))
+
+(setf pomeraj znak)
+
+(setf slova '(A B C D E F G H I J K L M N O P Q R S T U V W X Y Z))
+
+(setf prvi_igrac 0)
+
+(setf vrednost_polja_igranje '(X O))
+(setf moduo_za_vrednost_polja 0)
+
+
+(defun odabir_prvog_igraca (x)
+  (cond ((equal x 'x) (setf moduo_za_vrednost_polja 0))
+        (t (setf moduo_za_vrednost_polja 1))))
+
+
+
+(defun spremi-tablu()
+(loop for i from 0 to (- n 1)
+      do (loop for j from 0 to (- (* 4 n) 4)
+          do (setf (aref tabla i j) '*) (if(and(equal j znak)(< j (- (- (* 4 n) 3) pomeraj)))
+											(progn (setf (aref tabla i j) '8) (setf znak (+ znak 2)))
+											
+										)
+		  )
+		  
+		  ;;deo u spoljasnjoj petlji
+		  (setf znak (- n 1 i 1)) (setf pomeraj (- pomeraj 1))
+)
+(setf c 2)
+(loop for i from n to (- (* 2 n) 2)
+      do (loop for j from 0 to (- (* 4 n) 4)
+          do (setf (aref tabla i j) (aref tabla (- i c) j)) 
+		  )
+		  
+		  ;;deo u spoljasnjoj petlji
+		  (setf c (+ c 2)) 
+)
+)
+
+
+(defun odaberi-n(q)
+(setf n q)
+(setf znak (- n 1))
+(setf pomeraj znak)
+(spremi-tablu)
+)
+
+
+(defun stampaj(tablaa)
+(loop for i from 0 to (- (* 2 n) 2)
+      do (loop for j from 0 to (- (* 4 n) 4)
+          do (princ (aref tablaa i j)) (princ #\Space)
+		  )
+			(princ #\Newline)
+)
+)
+
+
+
+(defun mapiraj (a b igrac stanje)
+  (setf br (- n (position a slova) 1))
+(cond ( (validacija a b br stanje) (setf (aref stanje (position a slova) (+ (* 2 b) br) ) igrac))
+	(t '()))
+)
+
+;---igra se potez bez ucitavanja
+(defun igraj-direktno (a b igrac stanje)
+  (mapiraj a b igrac stanje)
+  (stampaj stanje))
+  
+
+(defun validacija (a b pomeraj stanje)
+  (cond ((equal (aref stanje (position a slova) (+ (* 2 b) pomeraj) ) '8 ) T)
+	(t '())))
+
+
+
+;----Ucitava listu poteza u tablu
+(defun ucitajpoteze (lista  tabla)
+  (cond ((null lista) tabla)
+        (t (mapiraj (caar lista)  (cadar lista) (caddar lista) tabla) (ucitajpoteze (cdr lista) tabla) )))
+
+;----Vraca listu svih mogucih poteza na osnovu grafa
+(defun moguci-potezi (graf)
+  (cond ((null graf) '())
+        ((equal (car (cddaar graf)) 8)
+         (cons (caar graf) (moguci-potezi (cdr graf))))
+        (t (moguci-potezi (cdr graf)))))
+
+
+;----formira novo stanje na osnovu poteza
+(defun formiraj-stanje(stanje potez)
+  (let* ((stanjenovo (kopiraj-mat stanje))
+  
+        (a (car potez))
+        (b (cadr potez))
+        (igrac (caddr potez)))
+    (mapiraj a b igrac stanjenovo)
+    stanjenovo))
+
+
+;------vraca listu svih mogucih stanja--
+(defun moguca-stanja (stanje igrac) ;stanje je zadato kao matrica
+  (let* ((graf_poteza (pravi_graf_rek 0 0 '() stanje))
+         (potezi (moguci-potezi graf_poteza)))
+    (moguca-stanja1 potezi stanje igrac)))
+
+
+(defun moguca-stanja1 (potezi stanje igrac)
+  (cond ((null potezi) '())
+        (t (let*
+            ((potez (list (caar potezi) (cadar potezi) igrac))
+             (stanjen (formiraj-stanje stanje potez)))
+          (cons stanjen (moguca-stanja1 (cdr potezi) stanje igrac))))))
+
+
+;-----funkcija za ucitavanje poteza igraca, provera da li je potez validan i ako jeste formira se novo stanje
+(defun igra-igrac (igrac stanje)
+  (let* (( a (read))
+         (b (read))
+         (pomeraj  (- n (position a slova) 1))
+         )
+    (cond ((null (validacija a b pomeraj stanje)) (progn (print "Nevalidan potez. Unesite ponovo: ") (princ #\Newline) (igra-igrac igrac stanje)))
+          (t (formiraj-stanje stanje (list a b igrac))))))
+
+;------funkcija za igru dva igraca na osnovu zadatog pocetnog stanja
+(defun dva_igraca (stanje)
+  (print "Igrac 1:")
+  (princ #\Newline)
+  ;----------prvi igrac--------
+  (setf stanje (igra-igrac (nth moduo_za_vrednost_polja vrednost_polja_igranje) stanje))
+    (setf moduo_za_vrednost_polja (mod moduo_za_vrednost_polja 2))
+    (setf moduo_za_vrednost_polja (mod (+ moduo_za_vrednost_polja 1) 2))
+  (stampaj stanje)
+  ;-------drugi igrac-----
+    (print "Igrac 2:")
+  (princ #\Newline)
+  (setf stanje (igra-igrac (nth moduo_za_vrednost_polja vrednost_polja_igranje) stanje))
+    (setf moduo_za_vrednost_polja (mod moduo_za_vrednost_polja 2))
+    (setf moduo_za_vrednost_polja (mod (+ moduo_za_vrednost_polja 1) 2))
+  (stampaj stanje)
+  stanje)
+
+
+;-------KREIRANJE__GRAFA__NA__OSNOVU__MATRICE-------
+(defun pravi_graf_rek(i j lista tablaa)
+  (cond ((> j (- (* 4 n) 4)) (pravi_graf_rek (+ 1 i) 0 lista tablaa))
+        ((> i  (- (* 2 n) 2)) lista)
+        (t 
+         (let ((lista1 
+                ( if (OR (equal (aref tablaa i j) 8) (equal (aref tablaa i j) 'x) (equal (aref tablaa i j) 'o)) 
+                    (append (list (list  (list (nth i slova) (/ (- (+ j i 1) n) 2) (aref tablaa i j)) (vrati_potege i j tablaa))) lista)
+                  lista
+                )))
+             (pravi_graf_rek i (+ j 1) lista1 tablaa)))))
+
+
+
+(defun vrati_potege(i j tablaa)
+	(list
+		(if (> i 0) (vrati_potomka_ako_postoji (- i 1) (- j 1) tablaa))
+		
+		(if (> i 0) (vrati_potomka_ako_postoji (- i 1) (+ 1 j) tablaa ))
+		
+		(if (> j 1) (vrati_potomka_ako_postoji i (- j 2) tablaa ))
+		
+		(if (< j (- (* 4 n) 5)) (vrati_potomka_ako_postoji i (+ 2 j) tablaa))
+		
+		(if (< i (- (* 2 n) 1)) (vrati_potomka_ako_postoji (+ 1 i) (- j 1) tablaa))
+	
+		(if (< i (- (* 2 n) 1)) (vrati_potomka_ako_postoji (+ 1 i) (+ j 1) tablaa))
+	)
+)
+
+(defun vrati_potomka_ako_postoji(i j tablaa)
+	(if (and (> i -1) (> j -1)) (if (OR (equal (aref tablaa i j) 8) (equal (aref tablaa i j) 'x) (equal (aref tablaa i j) 'o)) (list (nth i slova) (/ (- (+ j i 1) n) 2) (aref tablaa i j) )))
+)
+
+;-----------------------------------------OBRADA GRAFA----------------------------------------------
+
+(defun novi-cvorovi (potomci cvorovi igrac)
+  (cond ((null potomci) '()) 
+        ((AND (not (member (car potomci) cvorovi)) (equal (caddr (car potomci)) igrac))
+         (cons (car potomci) (novi-cvorovi (cdr potomci) cvorovi igrac)))
+        (t (novi-cvorovi (cdr potomci) cvorovi igrac))))
+
+
+(defun neobradjeni (potomci obradjeni)
+  (cond ((null potomci) '())
+        ((clan (car potomci) obradjeni) (neobradjeni (cdr potomci) obradjeni))
+        (t (cons (car potomci) (neobradjeni (cdr potomci) obradjeni)))))
+
+(defun dodaj-potomke (graf cvor cvorovi igrac) 
+  (cond ((null graf) '()) 
+        ((equal (caar graf) cvor)
+         (novi-cvorovi (cadar graf) cvorovi igrac)) 
+        (t (dodaj-potomke (cdr graf) cvor cvorovi igrac))))
+
+
+(defun nadji-put (graf l cilj cvorovi igrac) 
+  (cond  ((null l)  '())
+        ((NOT (equal (caddar l) (caddr cilj))) '())
+        ((equal (car l) cilj)  (list cilj))
+        (t  (let* ((cvorovi1 (append cvorovi (list (car l))))
+                   (potomci1 (dodaj-potomke graf (car l) (append (cdr l) cvorovi1) igrac))
+                   (l1 (append (cdr l) potomci1)) 
+                   (nadjeni-put (nadji-put graf l1 cilj cvorovi1 igrac)))
+              (cond ((null nadjeni-put)  '()) 
+                    ((member (car nadjeni-put) potomci1)  (cons (car l) nadjeni-put)) 
+                    (t  nadjeni-put))))))
+
+;---------pomocne funkcije -----------
+
+(defun kopiraj-mat (stanje)
+  (let* ((novaa (make-array '(60 100))))
+    (loop for i from 0 to (- (* 2 n) 2)
+        do (loop for j from 0 to (- (* 4 n) 4)
+               do (setf (aref novaa i j) (aref stanje i j))))
+    novaa))
+
+
+(defun stranica1 ( ind vrsta tablaa pocetni)
+  (cond ((equal (- n 1) ind) '())
+        (t (cons (list (nth vrsta slova) pocetni  (aref tablaa vrsta (+ (- n 1) (* 2 ind)))) (stranica1  (+ 1 ind) vrsta tablaa (+ pocetni 1))))))  
+  
+
+
+(defun stranica2 (starti kraji vrsta tablaa br)
+              (cond ((equal starti kraji) '())
+                    (t (cons (list (nth vrsta slova) br (aref tablaa vrsta starti)) (stranica2 (-  starti 1) kraji (+ vrsta 1) tablaa br)))))
+
+
+
+ (defun stranica3 (starti kraji vrsta tablaa broj)
+                (cond ((equal starti kraji) '())
+                      (t (cons (list (nth vrsta slova) broj (aref tablaa vrsta starti)) (stranica3 (+ starti 1) kraji (+ vrsta 1) tablaa (+  broj 1))))))
+
+
+
+(defun ispitaj-put-za-tri (teme1 teme2 teme3 graf igrac)
+  (cond ((OR 
+          (AND (not (null (nadji-put graf (list teme1) teme2 '() igrac))) (not (null (nadji-put graf (list teme1) teme3 '() igrac))))
+          (AND (not (null (nadji-put graf (list teme2) teme1 '() igrac))) (not (null (nadji-put graf (list teme2) teme3 '() igrac))))
+          (AND (not (null  (nadji-put graf (list teme3) teme1 '() igrac))) (not (null (nadji-put graf (list teme3) teme2 '() igrac))))
+          ) t)
+        (t '())))
+
+
+(defun kombinuj-cvor-lista (cvor lista)
+  (cond ((null lista) '())
+        (t (append (list (list cvor (car lista) )) (kombinuj-cvor-lista cvor (cdr lista))))))
+
+
+(defun kombinuj-dve-liste (lista1 lista2)
+  (cond ((null lista1) '())
+        (t (append  (kombinuj-cvor-lista (car lista1) lista2) (kombinuj-dve-liste (cdr lista1) lista2)))))
+
+(defun kombinuj-tri-liste (lista1 lista2 lista3)
+  (kombinuj-dve-liste lista1 (kombinuj-dve-liste lista2 lista3)))
+        
+
+;(kombinuj-tri-liste '((A 0 X) (B 1 X)) '((C 1 X) (C 2 X)) '((D 5 X) (D 6 X)))
+
+
+(defun proverifork (graf igrac lista)
+  (cond ((null lista) '())
+        (t (OR (ispitaj-put-za-tri (caar lista) (caadar lista) (car (cdadar lista)) graf igrac) (proverifork graf igrac (cdr lista))))))
+
+; (proverifork (pravi_graf_rek 0 0 '() tabla) 'x (kombinuj-tri-liste stranicagore gorelevo goredesno))
+
+;------ ispitivanje ciljnog stanja-----
+
+(defun bridge(graf igrac tablaa)
+;;temena su na:    (A 0 )  (A n-1)  ((n-1) 0)  ((n-1)(2n-2))  ((2n-2)(n-1))   ((2n-2)(2n-2)) 
+;; provera za sve kombinacije moguce od temena do temena
+		(or 				   ;;teme     do_temena
+				(if (and (equal (aref tablaa (position 'A slova) (+ (* 2 0) (- n (position 'A slova) 1))) igrac) 
+							(equal (aref tablaa (position 'A slova) (+ (* 2 (- n 1)) (- n (position 'A slova) 1))) igrac))
+					(nadji-put graf (list (list 'A 0 (aref tablaa (position 'A slova) (+ (* 2 0) (- n (position 'A slova) 1))))) (list 'A (- n 1) (aref tablaa (position 'A slova) (+ (* 2 0) (- n (position 'A slova) 1)))) '() (aref tablaa (position 'A slova) (+ (* 2 0) (- n (position 'A slova) 1)))) )
+								
+				(if (and (equal (aref tablaa (position 'A slova) (+ (* 2 0) (- n (position 'A slova) 1))) igrac) 
+							(equal (aref tablaa (position (nth (- n 1) slova) slova) (+ (* 2 0) (- n (position (nth (- n 1) slova) slova) 1))) igrac))
+					(nadji-put graf (list (list 'A 0 (aref tablaa (position 'A slova) (+ (* 2 0) (- n (position 'A slova) 1))))) (list (nth (- n 1) slova) 0 (aref tablaa (position 'A slova) (+ (* 2 0) (- n (position 'A slova) 1)))) '() (aref tablaa (position 'A slova) (+ (* 2 0) (- n (position 'A slova) 1)))) )
+				
+				(if (and (equal (aref tablaa (position 'A slova) (+ (* 2 0) (- n (position 'A slova) 1))) igrac) 
+							(equal (aref tablaa (position (nth (- n 1) slova) slova) (+ (* 2 (- (* 2 n) 2)) (- n (position (nth (- n 1) slova) slova) 1))) igrac))
+					(nadji-put graf (list (list 'A 0 (aref tablaa (position 'A slova) (+ (* 2 0) (- n (position 'A slova) 1))))) (list (nth (- n 1) slova) (- (* 2 n) 2) (aref tablaa (position 'A slova) (+ (* 2 0) (- n (position 'A slova) 1)))) '() (aref tablaa (position 'A slova) (+ (* 2 0) (- n (position 'A slova) 1)))) )
+				
+				(if (and (equal (aref tablaa (position 'A slova) (+ (* 2 0) (- n (position 'A slova) 1))) igrac) 
+							(equal (aref tablaa (position (nth (- (* 2 n) 2) slova) slova) (+ (* 2 (- n 1)) (- n (position (nth (- (* 2 n) 2) slova) slova) 1))) igrac))
+					(nadji-put graf (list (list 'A 0 (aref tablaa (position 'A slova) (+ (* 2 0) (- n (position 'A slova) 1))))) (list (nth (- (* 2 n) 2) slova) (- n 1) (aref tablaa (position 'A slova) (+ (* 2 0) (- n (position 'A slova) 1)))) '() (aref tablaa (position 'A slova) (+ (* 2 0) (- n (position 'A slova) 1)))) )
+				
+				(if (and (equal (aref tablaa (position 'A slova) (+ (* 2 0) (- n (position 'A slova) 1))) igrac) 
+							(equal (aref tablaa (position (nth (- (* 2 n) 2) slova) slova) (+ (* 2 (- (* 2 n) 2)) (- n (position (nth (- (* 2 n) 2) slova) slova) 1))) igrac))
+				(nadji-put graf (list (list 'A 0 (aref tablaa (position 'A slova) (+ (* 2 0) (- n (position 'A slova) 1))))) (list (nth (- (* 2 n) 2) slova) (- (* 2 n) 2) (aref tablaa (position 'A slova) (+ (* 2 0) (- n (position 'A slova) 1)))) '() (aref tablaa (position 'A slova) (+ (* 2 0) (- n (position 'A slova) 1)))) )
+   
+				
+				
+				;(nadji-put neki_graf '((A 0 X)) '(C 4 X) '() 'x)
+				;;temena su na:[[(A 0 )]]]       (A n-1)  ((n-1) 0)  ((n-1)(2n-2))  ((2n-2)(n-1))   ((2n-2)(2n-2)) 
+				(if (and (equal (aref tablaa (position 'A slova) (+ (* 2 (- n 1)) (- n (position 'A slova) 1))) igrac) 
+						(equal (aref tablaa (position (nth (- n 1) slova) slova) (+ (* 2 0) (- n (position (nth (- n 1) slova) slova) 1))) igrac))
+					(nadji-put graf (list (list 'A (- n 1) igrac)) (list (nth (- n 1) slova) 0 igrac) '() igrac) )
+				
+				(if (and (equal (aref tablaa (position 'A slova) (+ (* 2 (- n 1)) (- n (position 'A slova) 1))) igrac) 
+						(equal (aref tablaa (position (nth (- n 1) slova) slova) (+ (* 2 (- (* 2 n) 2)) (- n (position (nth (- n 1) slova) slova) 1))) igrac))
+					(nadji-put graf (list (list 'A (- n 1) igrac)) (list (nth (- n 1) slova) (- (* 2 n) 2) igrac) '() igrac) )
+				
+				(if (and (equal (aref tablaa (position 'A slova) (+ (* 2 (- n 1)) (- n (position 'A slova) 1))) igrac) 
+						(equal (aref tablaa (position (nth (- (* 2 n) 2) slova) slova) (+ (* 2 (- n 1)) (- n (position (nth (- (* 2 n) 2) slova) slova) 1))) igrac))
+					(nadji-put graf (list (list 'A (- n 1) igrac)) (list (nth (- (* 2 n) 2) slova) (- n 1) igrac) '() igrac) )
+				
+				(if (and (equal (aref tablaa (position 'A slova) (+ (* 2 (- n 1)) (- n (position 'A slova) 1))) igrac) 
+						(equal (aref tablaa (position (nth (- (* 2 n) 2) slova) slova) (+ (* 2 (- (* 2 n) 2)) (- n (position (nth (- (* 2 n) 2) slova) slova) 1))) igrac))
+					(nadji-put graf (list (list 'A (- n 1) igrac)) (list (nth (- (* 2 n) 2) slova) (- (* 2 n) 2) igrac) '() igrac) )
+				
+				
+				
+				;;temena su na:[[(A 0 )]]] [[(A n-1)]]    ((n-1) 0)  ((n-1)(2n-2))  ((2n-2)(n-1))   ((2n-2)(2n-2)) 
+				
+				(if (and (equal (aref tablaa (position (nth (- n 1) slova) slova) (+ (* 2 0) (- n (position (nth (- n 1) slova) slova) 1))) igrac) 
+						(equal (aref tablaa (position (nth (- n 1) slova) slova) (+ (* 2 (- (* 2 n) 2)) (- n (position (nth (- n 1) slova) slova) 1))) igrac))
+					(nadji-put graf (list (list ( nth (- n 1) slova) 0 igrac)) (list (nth (- n 1) slova) (- (* 2 n) 1) igrac) '() igrac) )
+				
+				(if (and (equal (aref tablaa (position (nth (- n 1) slova) slova) (+ (* 2 0) (- n (position (nth (- n 1) slova) slova) 1))) igrac) 
+						(equal (aref tablaa (position (nth (- (* 2 n) 2) slova) slova) (+ (* 2 (- n 1)) (- n (position (nth (- (* 2 n) 2) slova) slova) 1))) igrac))
+					(nadji-put graf (list (list ( nth (- n 1) slova) 0 igrac)) (list (nth (- (* 2 n) 1) slova) (- n 1) igrac) '() igrac) )
+				
+				(if (and (equal (aref tablaa (position (nth (- n 1) slova) slova) (+ (* 2 0) (- n (position (nth (- n 1) slova) slova) 1))) igrac) 
+						(equal (aref tablaa (position (nth (- (* 2 n) 2) slova) slova) (+ (* 2 (- (* 2 n) 2)) (- n (position (nth (- (* 2 n) 2) slova) slova) 1))) igrac))
+					(nadji-put graf (list (list ( nth (- n 1) slova) 0 igrac)) (list (nth (- (* 2 n) 1) slova) (- (* 2 n) 1) igrac) '() igrac) )
+				
+				
+				
+				;;temena su na:[[(A 0 )]]] [[(A n-1)]] [[((n-1) 0)]]   ((n-1)(2n-2))  ((2n-2)(n-1))   ((2n-2)(2n-2)) 
+				
+				(if (and (equal (aref tablaa (position (nth (- n 1) slova) slova) (+ (* 2 (- (* 2 n) 2)) (- n (position (nth (- n 1) slova) slova) 1))) igrac) 
+						(equal (aref tablaa (position (nth (- (* 2 n) 2) slova) slova) (+ (* 2 (- n 1)) (- n (position (nth (- (* 2 n) 2) slova) slova) 1))) igrac))
+					(nadji-put graf (list (list (nth (- n 1) slova) (- (* 2 n) 1) igrac)) (list (nth (- (* 2 n) 1) slova) (- n 1) igrac) '() igrac) )
+				
+				(if (and (equal (aref tablaa (position (nth (- n 1) slova) slova) (+ (* 2 (- (* 2 n) 2)) (- n (position (nth (- n 1) slova) slova) 1))) igrac) 
+						(equal (aref tablaa (position (nth (- (* 2 n) 2) slova) slova) (+ (* 2 (- (* 2 n) 2)) (- n (position (nth (- (* 2 n) 2) slova) slova) 1))) igrac))
+					(nadji-put graf (list (list (nth (- n 1) slova) (- (* 2 n) 2) igrac)) (list (nth (- (* 2 n) 2) slova) (- (* 2 n) 2) igrac) '() igrac) )
+				
+				
+				;;temena su na:[[(A 0 )]]] [[(A n-1)]] [[((n-1) 0)]] [[((n-1)(2n-2))]]   ((2n-2)(n-1))   ((2n-2)(2n-2)) 
+				
+				(if (and (equal (aref tablaa (position (nth (- (* 2 n) 2) slova) slova) (+ (* 2 (- n 1)) (- n (position (nth (- (* 2 n) 2) slova) slova) 1))) igrac) 
+						(equal (aref tablaa (position (nth (- (* 2 n) 2) slova) slova) (+ (* 2 (- (* 2 n) 2)) (- n (position (nth (- (* 2 n) 2) slova) slova) 1))) igrac))
+					(nadji-put graf (list (list (nth (- (* 2 n) 2) slova) (- n 1) igrac)) (list (nth (- (* 2 n) 2) slova) (- (* 2 n) 2) igrac) '() igrac) )
+				
+				
+   
+   )
+  )
+
+
+(defun fork (graf igrac tablaa)
+  (let* ((stranicagore (stranica1  1 0 tablaa 1))
+         (stranicadole (stranica1  1 (- (* 2 n) 2) tablaa  n))
+         (gorelevo (stranica2 (- n 2) 0 1 tablaa 0))
+         ( doledesno (stranica2 (- (* 4 n) 5) (- (* 3 n) 3) n tablaa (- (* 2 n) 2)))
+         ( goredesno (stranica3 (- (* 3 n) 2) (- (* 4 n) 4) 1 tablaa n))
+         (dolelevo (stranica3 1 (- n 1) n tablaa 1)))
+
+         
+         
+
+         
+         
+  (OR (proverifork graf igrac (kombinuj-tri-liste stranicagore gorelevo goredesno))
+      (proverifork graf igrac (kombinuj-tri-liste stranicagore gorelevo stranicadole))
+      (proverifork graf igrac (kombinuj-tri-liste stranicagore gorelevo doledesno))
+      (proverifork graf igrac (kombinuj-tri-liste stranicagore gorelevo dolelevo))
+      (proverifork graf igrac (kombinuj-tri-liste stranicagore goredesno doledesno))
+      (proverifork graf igrac (kombinuj-tri-liste stranicagore goredesno stranicadole))
+      (proverifork graf igrac (kombinuj-tri-liste stranicagore goredesno dolelevo))
+      (proverifork graf igrac (kombinuj-tri-liste stranicagore doledesno stranicadole))
+      (proverifork graf igrac (kombinuj-tri-liste stranicagore doledesno dolelevo))
+      (proverifork graf igrac (kombinuj-tri-liste stranicagore stranicadole dolelevo))
+      
+      (proverifork graf igrac (kombinuj-tri-liste goredesno gorelevo doledesno))
+      (proverifork graf igrac (kombinuj-tri-liste goredesno gorelevo dolelevo))
+      (proverifork graf igrac (kombinuj-tri-liste goredesno gorelevo stranicadole))
+      (proverifork graf igrac (kombinuj-tri-liste goredesno dolelevo doledesno))
+      (proverifork graf igrac (kombinuj-tri-liste goredesno dolelevo stranicadole))
+      (proverifork graf igrac (kombinuj-tri-liste goredesno doledesno stranicadole))
+      
+      (proverifork graf igrac (kombinuj-tri-liste doledesno gorelevo dolelevo))
+      (proverifork graf igrac (kombinuj-tri-liste doledesno gorelevo stranicadole))
+      (proverifork graf igrac (kombinuj-tri-liste doledesno dolelevo stranicadole))
+      (proverifork graf igrac (kombinuj-tri-liste gorelevo dolelevo stranicadole)))))
+
+
+(defun ispitaj-prsten (cvor graf igrac)
+               (cond ((equal 6 (list-length (dodaj-potomke graf cvor '() igrac))) t)
+                     (t '())))
+
+(defun ring-provera(graf igrac)
+	(cond ((equal (car graf) '()) '()) 
+	((equal (ispitaj-prsten (caar graf) graf igrac) t ) t)
+	(t (ring-provera (cdr graf) igrac)))
+  )
+
+(defun kraj(graf igrac tablaa)
+  (OR (fork graf igrac tablaa) (bridge graf igrac tablaa) (ring-provera graf igrac)))
+  
+  
+  
+  
+  
+  
+;;------------ALPHA-BETA_faza 3.  
+;;treba funkcija evaluacije
+;;treba alpha-beta_pruning 
+;;treba fukcija koja vraca listu mogucih poteza to cemo iz grafa najlakse da preuzmemo    car prvi pa cddr  se prosledi rekurzivno
+;;pre pozica a-b  stavimo sa let* igraca koji igra i onda na njemu menjamo naizmenicno igracakojin jw na redu
+
+
+;;evaluacija -> prosto jurimo poteze koji ce da vode pobedi
+;;ako vode igramo te poteze
+
+(defun evaluacija(graf igrac tablaa)
+(cond
+((and (kraj graf igrac tablaa) (equal igrac 'X)) 10)
+((and (kraj graf igrac tablaa) (equal igrac 'O)) -10)
+(t 0))
+)
+
+
+
+;;
+;;
+;;pre poziva treba da se sacuva|iskopira stanje table i da sa tim stanjem od kog ne zavisi igra radi alfa-beta algoritam
+;;fora koja se primenjuje je da se za svaki moguci potez simulira tok kako moze da ide igra,
+;;dok se ne dodje do pobede sa odigranim potezima ili da se blokira simulacija dubinom
+;;
+;;kako sve to funkcinise:
+;;uzima se recimo prvi potez, kao se odigra na onoj kopiranoj matrici i mi dobijemo novo stanje
+;; u prvom krugu bi se simuliralo za sve moguce poteze i time dobijemo onaj prvi nivo na binarnom stablu poteza 
+;; i za sve poteze dobijamo nova stanja iz kojih idemo dalje
+;;zatim se
+;; uzimamo da je odigran prvi potez iz liste mogucih
+;;dobijemo novo stanje, mi sad za njega uzimamo sve moguce poteze koji se mogu odigrati
+;;time bi formirali nov nivo binarnog stabla
+;;  ......
+;; i tako formiramo sva moguca stanja dok se ne dodje do trazene dubine ili nisu odigrani svi potezi
+;;alfa beta treba da se pozove nad "novo tablom"
+;;slao sam script.js
+;;tu on menja trentuno stanje table ali samo da bi mogo da evalira tablu, ali zatim pozove undo funkciju koja ce da ponisti potez
+;;i on ce nakon poziva alfa beta  svim undo-ima da vrati tablu na nepromenjeno stanje
+
+(defun alfa-beta (graf dubina alfa beta igrac tabla)
+			(let* ((prethodno-stanje(kopiraj-mat tabla) )  ;; treba pre poziva alfa bete da se sacuva to neko stanje, a graf je taj naziv za novo stanje sa kojim se radi
+	
+	(dostupni-potezi (reverse (moguci-potezi graf))))
+     ;;(print dostupni-potezi)
+    ;; (princ #\Newline)
+	;;(stampaj tabla)
+	
+			;;provera da li je dubina 0 ili nema poteza vise za igru
+	(cond
+	((OR (equal dubina 0) (equal (length dostupni-potezi) 0))  (list '- '- (evaluacija graf igrac tabla)))
+	
+
+	
+	
+			;;ova evaluacija daje one vrednosti sto su na dnu onog binarnog stabla pa kreces da ih vracas jedan po jedan na gore
+	
+			;;sad ide deo za alfa beta odsecanje
+			;;naizmenicno mala vrednost od koje ce max sigurno biti veci pa ako nije X onda treba za min igraca velika vrednost od koje ce sigurno da bude manja
+			;;best ce da bude potez koji ce ovaj algoritam da vrati na kraju  prva crtica je red, druga kolona na tabli, a ovo trece je koliko je dobar potez
+			
+	(t (let* ((best  (list '- '- -9000)))
+	;(print best)
+	;(print (length dostupni-potezi))
+	(if (equal igrac 'X)
+				(progn (loop for pot in dostupni-potezi 
+							do(let* ((novipot (flatten (list (reverse (cdr (reverse pot))) 'X))) (novo (alfa-beta (pravi_graf_rek 0 0 '() (formiraj-stanje prethodno-stanje novipot)) (- dubina 1) alfa beta 'O (formiraj-stanje prethodno-stanje novipot)) )) 
+							;;ovde se menja potez pogledaj bolje c# kod 
+							;; ono sto vraca ce da bude list oblika (red kolona i evaluacija) ali nama treci elemenat nece da treba
+						;(print novipot)
+						;(print novo)
+						;(print best)
+						;(print (caddr best))
+           ;(print (caddr novo))
+           
+						;;(princ (list (nth 2 novo) (nth 2 best)))(print (list (nth 0 best) (nth 0 pot)))(print (list (nth 1 best) (nth 1 pot)))
+          
+           
+						;;(setf (car best) (nth 0 pot)) (setf (cadr best) (nth 1 pot))
+						(if (> (caddr novo) (caddr best )) (progn (setf (car best) (nth 0 pot)) (setf (cadr best) (nth 1 pot))  (setf (caddr best) (nth 2 novo))
+ ))
+						(setf alfa (min alfa (nth 2 best)))
+           (if (<= beta alfa) (loop-finish))
+          ; (print "BEST ")
+						;(print best)
+						)
+						))
+				(progn (setf (caddr best) 9000)  (loop for pot in dostupni-potezi 
+					do(let* ((novipot (flatten (list (reverse (cdr (reverse pot))) 'O)))(novo  (alfa-beta (pravi_graf_rek 0 0 '() (formiraj-stanje prethodno-stanje novipot)) (- dubina 1) alfa beta 'X (formiraj-stanje prethodno-stanje novipot) )  ))
+						;(print novipot)
+						;(print novo)
+						;(print best)
+						;(print (caddr best))
+						;(print (caddr novo))
+						;;(princ (list (nth 2 novo) (nth 2 best)))(print (list (nth 0 best) (nth 0 pot)))(print (list (nth 1 best) (nth 1 pot)))
+       
+         
+						;;(setf (car best) (nth 0 pot)) (setf (cadr best) (nth 1 pot))
+						(if (< (caddr novo ) (caddr best )) (progn   (setf (caddr best) (nth 2 novo)) (setf (car best) (nth 0 pot)) (setf (cadr best) (nth 1 pot))  (setf (caddr best) (nth 2 novo))
+))
+						(setf beta (max beta (nth 2 best)))
+         (if (<= beta alfa) (loop-finish))
+          ;(print "BEST ")
+						;(print best)
+						)
+						)
+	))
+	
+best
+     )))))
+	 
+;;(alfa-beta (pravi_graf_rek 0 0 '() tabla) 1 -9000 9000 'X tabla)
+
+ (defun alfabeta (stanje dubina igrac)
+  (flatten (list (reverse (cdr (reverse (alfa-beta (pravi_graf_rek 0 0 '() stanje) dubina -9000 9000 igrac stanje)))) igrac)
+  ))
+
+
+;;;----formira novo stanje na osnovu poteza
+;;(defun formiraj-stanje(stanje potez)
+;;  (let* ((stanjenovo (kopiraj-mat stanje))
+;;  
+;;        (a (car potez))
+;;        (b (cadr potez))
+;;       (igrac (caddr potez)))
+;;    (mapiraj a b igrac stanjenovo)
+  ;;    stanjenovo))
+  
+(defun flatten (l)
+               (cond ((null l) '()) 
+                     ((atom l) (list l)) 
+                     ((atom (car l)) 
+                      (cons (car l) (flatten (cdr l)))) 
+                     (t (append (flatten (car l)) 
+                                (flatten (cdr l))))))			   
+			   
+			   
+			   
+			   
+			   

@@ -1,0 +1,87 @@
+(setf tabla (make-array '(60 100)))
+
+(setf n 6)
+
+(setf znak (- n 1))
+
+(setf pomeraj znak)
+
+
+
+
+(defun spremi-tablu()
+(loop for i from 0 to (- n 1)
+      do (loop for j from 0 to (- (* 4 n) 4)
+          do (setf (aref tabla i j) '*) (if(and(equal j znak)(< j (- (- (* 4 n) 3) pomeraj)))
+											(progn (setf (aref tabla i j) '8) (setf znak (+ znak 2)))
+											
+										)
+		  )
+		  
+		  ;;deo u spoljasnjoj petlji
+		  (setf znak (- n 1 i 1)) (setf pomeraj (- pomeraj 1))
+)
+(setf c 2)
+(loop for i from n to (- (* 2 n) 2)
+      do (loop for j from 0 to (- (* 4 n) 4)
+          do (setf (aref tabla i j) (aref tabla (- i c) j)) 
+		  )
+		  
+		  ;;deo u spoljasnjoj petlji
+		  (setf c (+ c 2)) 
+)
+)
+
+
+
+(defun odaberi-n(q)
+(setf n q)
+(setf znak (- n 1))
+(setf pomeraj znak)
+(spremi-tablu)
+)
+
+(defun odigraj-potez(a b igrac)
+(setf (aref tabla a b) igrac)
+)
+
+(defun stampaj()
+(loop for i from 0 to (- (* 2 n) 2)
+      do (loop for j from 0 to (- (* 4 n) 4)
+          do (princ (aref tabla i j)) (princ #\Space)
+		  )
+			(princ #\Newline)
+)
+)
+
+(setf slova '(A B C D E F G H I J K L M N O P Q R S T U V W X Y Z))
+
+
+(defun dodaj-kljuceve (i broj)
+  (cond ((equal i broj) potezi-igraca)
+        (t (cons (list (nth i slova)) (dodaj-kljuceve (+ i 1) broj)))))
+
+
+
+
+
+(setf potezi-igraca (make-list (- ( * 2 n) 1)))
+  
+(setf nekibroj (- ( * 2 n)1))
+
+(setf potezi-igraca (dodaj-kljuceve 0 nekibroj))
+
+(defun dodaj-potez ( a b igrac)
+  (setf (nth (position a slova) potezi-igraca) (append  (nth (position a slova) potezi-igraca) (list (list b igrac)))))
+
+(defun validacija (a b pomeraj)
+(cond ((equal (aref tabla (position a slova) (+ (* 2 b) pomeraj) ) '8 ) T)
+	(t'())
+))
+
+(defun mapiraj ( a b igrac)
+  
+  (setf br (- n (position a slova) 1))
+(cond ( (validacija a b br) (setf (aref tabla (position a slova) (+ (* 2 b) br) ) igrac))
+	(t '()))
+)

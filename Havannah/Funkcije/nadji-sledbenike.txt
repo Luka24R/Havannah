@@ -1,0 +1,5 @@
+(defun nadji-sledbenike(cvor graf)
+	(cond ((null graf) '())
+	((null cvor) '())
+	(t (cadr (assoc cvor graf))))
+)

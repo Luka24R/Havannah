@@ -1,0 +1,10 @@
+(defun pravi_graf_rek(i j lista)
+  (cond ((equal j (- (* 4 n) 4)) (pravi_graf_rek (+ 1 i) 0 lista))
+        ((equal i  (- (* 2 n) 2)) lista)
+        (t 
+         (let ((lista1 
+                ( if (equal (aref tabla i j) 8)
+                    (append (list (list  (list (nth i slova) (/ (- (+ j i 1) n) 2) (aref tabla i j)) (vrati_potege i j))) lista)
+                  lista
+                )))
+             (pravi_graf_rek i (+ j 1) lista1)))))

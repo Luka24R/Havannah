@@ -1,0 +1,27 @@
+(defun novi-cvorovi (potomci cvorovi igrac)
+  (cond ((null potomci) '()) 
+        ((AND (not (member (car potomci) cvorovi)) (equal (caddr (car potomci)) igrac))
+         (cons (car potomci) (novi-cvorovi (cdr potomci) cvorovi igrac)))
+        (t (novi-cvorovi (cdr potomci) cvorovi igrac))))
+
+
+
+
+(defun dodaj-potomke (graf cvor cvorovi igrac) 
+  (cond ((null graf) '()) 
+        ((equal (caar graf) cvor)
+         (novi-cvorovi (cadar graf) cvorovi igrac)) 
+        (t (dodaj-potomke (cdr graf) cvor cvorovi igrac))))
+
+
+(defun nadji-put (graf l cilj cvorovi igrac) 
+  (cond  ((null l)  '()) 
+        ((equal (car l) cilj)  (list cilj))
+        (t  (let* ((cvorovi1 (append cvorovi (list (car l))))
+                   (potomci1 (dodaj-potomke graf (car l) (append (cdr l) cvorovi1) igrac))
+                   (l1 (append (cdr l) potomci1)) 
+                   (nadjeni-put (nadji-put graf l1 cilj cvorovi1 igrac)))
+              (cond ((null nadjeni-put)  '()) 
+                    ((member (car nadjeni-put) potomci1)  (cons (car l) nadjeni-put)) 
+                    (t  nadjeni-put))))))
+;(nadji-put neki_graf '((A 0 X)) '(C 4 X) '() 'x)
